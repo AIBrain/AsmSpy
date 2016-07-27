@@ -2,15 +2,17 @@
 
 namespace AsmSpy.Native
 {
+    using System;
+
     internal static class FileInfoExtensions
     {
-        internal static bool IsAssembly(this FileInfo fileInfo)
+        internal static Boolean IsAssembly(this FileInfo fileInfo)
         {
             if (fileInfo.Length < 4096)
             {
                 return false;
             }
-            var data = new byte[4096];
+            var data = new Byte[4096];
             using (var fs = File.Open(fileInfo.FullName, FileMode.Open, FileAccess.Read))
             {
                 var iRead = fs.Read(data, 0, 4096);
@@ -21,7 +23,7 @@ namespace AsmSpy.Native
             }
             unsafe
             {
-                fixed (byte* pData = data)
+                fixed (Byte* pData = data)
                 {
                     var idh = (ImageDosHeader*)pData;
                     var inhs = (ImageNtHeaders32*)(idh->FileAddressOfNewExeHeader + pData);

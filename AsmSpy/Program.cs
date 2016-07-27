@@ -1,16 +1,15 @@
-﻿using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using AsmSpy.Native;
-
-namespace AsmSpy
+﻿namespace AsmSpy
 {
-    public class Program
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Reflection;
+    using Native;
+
+    public static class Program
     {
-        static readonly ConsoleColor[] ConsoleColors = new ConsoleColor[]
-        {
+        private static readonly ConsoleColor[] ConsoleColors = {
             ConsoleColor.Green,
             ConsoleColor.Red,
             ConsoleColor.Yellow,
@@ -19,11 +18,11 @@ namespace AsmSpy
             ConsoleColor.Magenta,
         };
 
-        static readonly string[] HelpSwitches = new string[] { "/?", "-?", "-help", "--help" };
-        static readonly string[] NonSystemSwitches = new string[] { "/n", "nonsystem", "/nonsystem" };
-        static readonly string[] AllSwitches = new string[] { "/a", "all", "/all" };
+        private static readonly String[] HelpSwitches = { "/?", "-?", "-help", "--help" };
+        private static readonly String[] NonSystemSwitches = { "/n", "nonsystem", "/nonsystem" };
+        private static readonly String[] AllSwitches = { "/a", "all", "/all" };
 
-        static void Main(string[] args)
+        private static void Main(String[] args)
         {
             if (
                 args.Length > 3 || 
@@ -48,13 +47,13 @@ namespace AsmSpy
             AnalyseAssemblies(new DirectoryInfo(directoryPath), onlyConflicts, skipSystem);
         }
 
-        public static void AnalyseAssemblies(DirectoryInfo directoryInfo, bool onlyConflicts, bool skipSystem)
+        public static void AnalyseAssemblies(DirectoryInfo directoryInfo, Boolean onlyConflicts, Boolean skipSystem)
         {
-            var assemblyFiles = directoryInfo.GetFiles("*.dll").Concat(directoryInfo.GetFiles("*.exe"));
+            var assemblyFiles = directoryInfo.GetFiles("*.dll").Concat(directoryInfo.GetFiles("*.exe")).ToList();
+
             if (!assemblyFiles.Any())
             {
-                Console.WriteLine("No dll files found in directory: '{0}'",
-                    directoryInfo.FullName);
+                Console.WriteLine( $"No dll files found in directory: '{directoryInfo.FullName}'" );
                 return;
             }
 
@@ -62,10 +61,10 @@ namespace AsmSpy
             Console.WriteLine(directoryInfo.FullName);
             Console.WriteLine("");
 
-            var assemblies = new Dictionary<string, IList<ReferencedAssembly>>(StringComparer.OrdinalIgnoreCase);
+            var assemblies = new Dictionary<String, IList<ReferencedAssembly>>(StringComparer.OrdinalIgnoreCase);
             foreach (var fileInfo in assemblyFiles.OrderBy(asm => asm.Name))
             {
-                Assembly assembly = null;
+                Assembly assembly;
                 try
                 {
                     if (!fileInfo.IsAssembly())
@@ -76,7 +75,7 @@ namespace AsmSpy
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Failed to load assembly '{0}': {1}", fileInfo.FullName, ex.Message);
+                    Console.WriteLine( $"Failed to load assembly '{fileInfo.FullName}': {ex.Message}" );
                     continue;
                 }
 
@@ -96,60 +95,63 @@ namespace AsmSpy
 
             foreach (var assemblyReferences in assemblies.OrderBy(i => i.Key))
             {
-                if (skipSystem && (assemblyReferences.Key.StartsWith("System") || assemblyReferences.Key.StartsWith("mscorlib"))) continue;
-
-                if (!onlyConflicts || assemblyReferences.Value.GroupBy(x => x.VersionReferenced).Count() != 1)
-                {
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.Write("Reference: ");
-                    Console.ForegroundColor = ConsoleColor.Gray;
-                    Console.WriteLine("{0}", assemblyReferences.Key);
-
-                    var referencedAssemblies = new List<Tuple<string, string>>();
-                    var versionsList = new List<string>();
-                    var asmList = new List<string>();
-                    foreach (var referencedAssembly in assemblyReferences.Value)
-                    {
-                        var s1 = referencedAssembly.VersionReferenced.ToString();
-                        var s2 = referencedAssembly.ReferencedBy.GetName().Name;
-                        var tuple = new Tuple<string, string>(s1, s2);
-                        referencedAssemblies.Add(tuple);
-                    }
-
-                    foreach (var referencedAssembly in referencedAssemblies)
-                    {
-                        if (!versionsList.Contains(referencedAssembly.Item1))
-                        {
-                            versionsList.Add(referencedAssembly.Item1);
-                        }
-                        if (!asmList.Contains(referencedAssembly.Item1))
-                        {
-                            asmList.Add(referencedAssembly.Item1);
-                        }
-                    }
-
-                    foreach (var referencedAssembly in referencedAssemblies)
-                    {
-                        var versionColor = ConsoleColors[versionsList.IndexOf(referencedAssembly.Item1) % ConsoleColors.Length];
-
-                        Console.ForegroundColor = versionColor;
-                        Console.Write("   {0}", referencedAssembly.Item1);
-
-                        Console.ForegroundColor = ConsoleColor.White;
-                        Console.Write(" by ");
-
-                        Console.ForegroundColor = ConsoleColor.Gray;
-                        Console.WriteLine("{0}", referencedAssembly.Item2);
-                    }
-
-                    Console.WriteLine();
+                if ( skipSystem && ( assemblyReferences.Key.StartsWith( "System" ) || assemblyReferences.Key.StartsWith( "mscorlib" ) ) ) {
+                    continue;
                 }
+
+                if ( onlyConflicts && assemblyReferences.Value.GroupBy( x => x.VersionReferenced ).Count() == 1 ) {
+                    continue;
+                }
+
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("Reference: ");
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.WriteLine( $"{assemblyReferences.Key}" );
+
+                var referencedAssemblies = new List<Tuple<String, String>>();
+                var versionsList = new List<String>();
+                var asmList = new List<String>();
+                foreach (var referencedAssembly in assemblyReferences.Value)
+                {
+                    var s1 = referencedAssembly.VersionReferenced.ToString();
+                    var s2 = referencedAssembly.ReferencedBy.GetName().Name;
+                    var tuple = new Tuple<String, String>(s1, s2);
+                    referencedAssemblies.Add(tuple);
+                }
+
+                foreach (var referencedAssembly in referencedAssemblies)
+                {
+                    if (!versionsList.Contains(referencedAssembly.Item1))
+                    {
+                        versionsList.Add(referencedAssembly.Item1);
+                    }
+                    if (!asmList.Contains(referencedAssembly.Item1))
+                    {
+                        asmList.Add(referencedAssembly.Item1);
+                    }
+                }
+
+                foreach (var referencedAssembly in referencedAssemblies)
+                {
+                    var versionColor = ConsoleColors[versionsList.IndexOf(referencedAssembly.Item1) % ConsoleColors.Length];
+
+                    Console.ForegroundColor = versionColor;
+                    Console.Write( $"   {referencedAssembly.Item1}" );
+
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.Write(" by ");
+
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                    Console.WriteLine( $"{referencedAssembly.Item2}" );
+                }
+
+                Console.WriteLine();
             }
         }
 
-        private static void PrintDirectoryNotFound(string directoryPath)
+        private static void PrintDirectoryNotFound(String directoryPath)
         {
-            Console.WriteLine("Directory: '" + directoryPath + "' does not exist.");
+            Console.WriteLine( $"Directory: \'{directoryPath}\' does not exist." );
         }
 
         private static void PrintUsage()
@@ -159,26 +161,14 @@ namespace AsmSpy
             Console.WriteLine();
 
             Console.WriteLine("Switches:");
-            Console.WriteLine("/all       : list all assemblies and references. Supported formats:  " + string.Join(",", AllSwitches));
-            Console.WriteLine("/nonsystem : list system assemblies. Supported formats:  " + string.Join(",", NonSystemSwitches));
+            Console.WriteLine("/all       : list all assemblies and references. Supported formats:  " + String.Join(",", AllSwitches));
+            Console.WriteLine("/nonsystem : list system assemblies. Supported formats:  " + String.Join(",", NonSystemSwitches));
             Console.WriteLine();
 
             Console.WriteLine("E.g.");
             Console.WriteLine(@"AsmSpy C:\Source\My.Solution\My.Project\bin\Debug");
             Console.WriteLine(@"AsmSpy C:\Source\My.Solution\My.Project\bin\Debug all");
             Console.WriteLine(@"AsmSpy C:\Source\My.Solution\My.Project\bin\Debug nonsystem");
-        }
-    }
-
-    public class ReferencedAssembly
-    {
-        public Version VersionReferenced { get; private set; }
-        public Assembly ReferencedBy { get; private set; }
-
-        public ReferencedAssembly(Version versionReferenced, Assembly referencedBy)
-        {
-            VersionReferenced = versionReferenced;
-            ReferencedBy = referencedBy;
         }
     }
 }

@@ -2,10 +2,12 @@
 
 namespace AsmSpy.Native
 {
+    using System;
+
     [StructLayout(LayoutKind.Explicit)]
     internal struct ImageDosHeader
     {
         [FieldOffset(60)]
-        public int FileAddressOfNewExeHeader;
+        public readonly Int32 FileAddressOfNewExeHeader;
     }
 }

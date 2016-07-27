@@ -2,11 +2,13 @@
 
 namespace AsmSpy.Native
 {
+    using System;
+
     [StructLayout(LayoutKind.Explicit)]
     internal struct ImageNtHeaders32
     {
         [FieldOffset(0)]
-        public uint Signature;
+        public readonly UInt32 Signature;
         [FieldOffset(4)]
         public ImageFileHeader FileHeader;
         [FieldOffset(24)]
